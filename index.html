@@ -121,17 +121,10 @@ body.ready .scroll-cue{opacity:1}
 .scroll-cue i::after{content:"";position:absolute;left:0;top:-100%;width:100%;height:100%;background:var(--signal);animation:cuedrop 1.8s cubic-bezier(.7,0,.3,1) infinite}
 @keyframes cuedrop{to{top:100%}}
 /* flight data strip (moved out of hero) */
-.strip{border-bottom:1px solid var(--line);background:color-mix(in srgb,#fff 46%,transparent)}
+.strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:color-mix(in srgb,#fff 46%,transparent)}
 .strip .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:20px;padding-top:24px;padding-bottom:24px}
 .st .n{font-family:var(--disp);font-weight:600;font-size:22px}
 .st .l{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--slate);margin-top:3px}
-
-/* ================= marquee ================= */
-.marquee{background:var(--dk);color:var(--dkmut);overflow:hidden;padding:15px 0;white-space:nowrap}
-.marquee-track{display:inline-flex;animation:scroll 30s linear infinite}
-.marquee span{font-family:var(--mono);font-size:13px;letter-spacing:.12em;text-transform:uppercase;padding:0 34px;position:relative}
-.marquee span::after{content:"✦";position:absolute;right:-8px;color:var(--signal)}
-@keyframes scroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 /* ================= floating capability chips (B-EGG vitamins principle) ================= */
 .chips-sec{padding:110px 0 90px;position:relative;overflow:hidden}
@@ -276,6 +269,14 @@ footer .tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-tra
 .chat-suggest{display:flex;gap:8px;flex-wrap:wrap;padding:0 20px 6px}
 .chat-suggest button{background:transparent;border:1px solid var(--dkline);color:var(--dkmut);border-radius:100px;font-family:var(--body);font-size:12.5px;padding:7px 13px;cursor:pointer;transition:border-color .2s,color .2s}
 .chat-suggest button:hover{border-color:var(--signal);color:#fff}
+.msg-actions{display:flex;gap:8px;flex-wrap:wrap;align-self:flex-start;max-width:90%;animation:msgIn .3s cubic-bezier(.2,.8,.2,1)}
+.msg-actions a{display:inline-flex;align-items:center;gap:7px;text-decoration:none;font-family:var(--body);font-weight:600;font-size:13px;padding:10px 16px;border-radius:100px;background:var(--signal);color:#fff;transition:transform .15s,background .2s}
+.msg-actions a:hover{transform:translateY(-1px);background:#e64108}
+.msg-actions a.alt{background:transparent;border:1.5px solid var(--dkline);color:var(--dktext)}
+.msg-actions a.alt:hover{border-color:var(--signal);color:#fff;background:transparent}
+.qrow{display:flex;gap:8px;flex-wrap:wrap;align-self:flex-start;animation:msgIn .3s cubic-bezier(.2,.8,.2,1)}
+.qrow button{background:transparent;border:1px solid var(--dkline);color:var(--dkmut);border-radius:100px;font-family:var(--body);font-size:12.5px;padding:8px 14px;cursor:pointer;transition:border-color .2s,color .2s}
+.qrow button:hover{border-color:var(--signal);color:#fff}
 
 /* ================= theme switcher (dev tool) ================= */
 .themer{position:fixed;bottom:26px;left:26px;z-index:90;display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--line);border-radius:100px;padding:9px 14px;box-shadow:0 14px 40px -16px rgba(0,0,0,.25)}
@@ -393,12 +394,6 @@ footer .tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-tra
   </div>
   <div class="scroll-cue">Scroll<i></i></div>
 </header>
-
-<div class="marquee" aria-hidden="true">
-  <div class="marquee-track" id="mq">
-    <span>AI literacy for teams</span><span>Custom agents</span><span>Workflow automation</span><span>WhatsApp &amp; Telegram bots</span><span>LLM strategy</span><span>Prompt systems</span><span>AI ops</span><span>AI-ready operations</span>
-  </div>
-</div>
 
 <div class="strip" aria-label="Voomox at a glance">
   <div class="wrap">
@@ -579,6 +574,7 @@ footer .tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-tra
         <a href="#program">Program</a>
         <a href="#founder">Founder</a>
         <a href="https://www.linkedin.com/in/pedrodaguiar/" target="_blank" rel="noopener">LinkedIn</a>
+        <a href="https://wa.me/351915873259" target="_blank" rel="noopener" id="footWa">WhatsApp</a>
         <a href="mailto:pedro.aguiar@voomox.com">pedro.aguiar@voomox.com</a>
       </div>
     </div>
@@ -613,9 +609,9 @@ footer .tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-tra
   </div>
   <div class="chat-body" id="body"></div>
   <div class="chat-suggest" id="suggest">
+    <button onclick="Chat.ask('Book a call with Pedro')">📅 Book a call</button>
     <button onclick="Chat.ask('What does Voomox do?')">What does Voomox do?</button>
-    <button onclick="Chat.ask('How much does it cost?')">Pricing</button>
-    <button onclick="Chat.ask('Can AI help my business?')">Can AI help me?</button>
+    <button onclick="Chat.ask('Can I talk on WhatsApp?')">💬 WhatsApp</button>
   </div>
   <div class="chat-input">
     <input id="input" type="text" placeholder="Ask the agent anything…" autocomplete="off" aria-label="Message">
@@ -633,10 +629,12 @@ footer .tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-tra
    file — it would be readable by anyone via view-source.
    ============================================================ */
 const AGENT_CFG = {
-  PROXY_URL: "/api/agent",
-  BASE_URL: "",   // direct-call mode disabled in production
-  API_KEY:  ""    // never ship a key here
+  PROXY_URL: "/api/agent",                                  // Vercel serverless proxy to the Base44 superagent
+  CALENDLY_URL: "https://calendly.com/pedrodaguiar/intro",  // Calendly link (syncs to Google Calendar)
+  WHATSAPP: "351915873259",                                 // ⚠️ YOUR NUMBER, digits only, country code first
+  EMAIL: "pedro.aguiar@voomox.com"
 };
+const WA_LINK="https://wa.me/"+AGENT_CFG.WHATSAPP+"?text="+encodeURIComponent("Hi Pedro — found you via voomox.com. I'd like to talk about AI for my business.");
 
 /* ---------- preloader ---------- */
 (function(){
@@ -869,9 +867,6 @@ const AGENT_CFG = {
   io2.observe(blast);
 })();
 
-/* ---------- marquee duplicate ---------- */
-document.getElementById('mq').innerHTML+=document.getElementById('mq').innerHTML;
-
 /* ---------- nav hide + scroll plane companion ---------- */
 (function(){
   let last=0;const nav=document.getElementById('nav'),plane=document.getElementById('plane');
@@ -885,59 +880,150 @@ document.getElementById('mq').innerHTML+=document.getElementById('mq').innerHTML
   },{passive:true});
 })();
 
-/* ---------- Chat: agent bridge with demo fallback ---------- */
+/* ---------- Chat: concierge brain + live agent bridge ---------- */
 const Chat=(function(){
   const panel=document.getElementById('panel'),body=document.getElementById('body'),
         input=document.getElementById('input'),fab=document.getElementById('fab'),
         status=document.getElementById('status'),suggest=document.getElementById('suggest');
   let conversationId=null,greeted=false;
+  const ctx={email:null,lastIntent:null};
 
-  const DEMO={
-    greet:"Hey — I'm the Voomox agent. ✈️\n\nI can tell you what we do, how an engagement works, or help you figure out where AI fits in your business. What's on your mind?",
-    answers:[
-      [/price|cost|pricing|much|fee/i,"Engagements are scoped to your team, but the shape is always the same: a training sprint (Ground School), a build phase (Takeoff), and optional ongoing support (Autopilot).\n\nTell me your team size and industry and I can sketch what a typical engagement would look like — or leave your email and Pedro will send you a real proposal."],
-      [/what.*(voomox|you do)|about voomox/i,"Voomox does two things:\n\n1. Teaches your team how AI actually works — hands-on, on your real workflows, not theory.\n2. Builds it into your business — custom agents, chatbots, and automations wired into the tools you already use.\n\nThe goal is a team that runs on AI independently, not one that depends on consultants forever."],
-      [/help my|my business|my company|use case|fit/i,"Almost certainly, yes — but not everywhere. The pattern we see: the biggest wins are in repetitive communication (email, WhatsApp, support), document work (proposals, reports, summaries), and data routing between tools.\n\nWhat does your business do? I can point at the 2–3 places AI would pay off first."],
-      [/who|pedro|founder/i,"Voomox was founded by Pedro Aguiar — 19 years in tech and business development across gaming (Ubisoft, Square Enix), Web3, and AI. He runs his own companies on the same agent stack Voomox builds for clients. You can find him on LinkedIn: linkedin.com/in/pedrodaguiar"],
-      [/contact|email|call|meeting|talk/i,"Easiest way: email pedro.aguiar@voomox.com or connect with Pedro on LinkedIn (linkedin.com/in/pedrodaguiar). Tell him what you're trying to automate and he'll come back with a concrete first step."]
-    ],
-    fallback:"Good question. In live mode I'd pull a proper answer from the Voomox knowledge base — right now I'm running in demo mode.\n\nFor anything specific, drop a line to pedro.aguiar@voomox.com and Pedro will answer personally."
+  const ACT={
+    book:{t:'\uD83D\uDCC5 Book a call',h:AGENT_CFG.CALENDLY_URL},
+    wa:{t:'\uD83D\uDCAC WhatsApp Pedro',h:WA_LINK,alt:true},
+    mail:{t:'\u2709\uFE0F Email Pedro',h:'mailto:'+AGENT_CFG.EMAIL,alt:true},
+    li:{t:'in LinkedIn',h:'https://www.linkedin.com/in/pedrodaguiar/',alt:true}
   };
+
+  /* Local intents. local:true = always answered on-page (booking/contact actions),
+     everything else tries the live agent first and falls back here. */
+  const KB=[
+    {id:'whatsapp',local:true,
+     re:/whats\s?app|\bzap\b|message (you|pedro|him)|text (you|pedro|him)/i,
+     text:"Absolutely \u2014 WhatsApp is the fastest way to reach Pedro directly. One tap below opens the chat with him.",
+     actions:[ACT.wa,ACT.book],quick:['What does Voomox do?','Pricing']},
+    {id:'book',local:true,
+     re:/\b(book|booking|meet|meeting|schedule|calendly|calendar|appointment|demo|consult|slot|agenda|marcar|reuni\u00e3o|call with|a call)\b/i,
+     text:"Let's get you in Pedro's calendar. The button below shows his live availability \u2014 pick a slot and it books straight into his Google Calendar with a video link attached.\n\nIn a hurry? WhatsApp him instead.",
+     actions:[ACT.book,ACT.wa],quick:['What happens on the call?','Pricing']},
+    {id:'contact',local:true,
+     re:/contact|reach (you|pedro)|get in touch|talk to (a )?(human|person|pedro)|falar com/i,
+     text:"Three direct lines to Pedro \u2014 pick your speed:\n\n\u2022 Book a call: straight into his calendar\n\u2022 WhatsApp: fastest reply\n\u2022 Email: pedro.aguiar@voomox.com",
+     actions:[ACT.book,ACT.wa,ACT.mail],quick:['What does Voomox do?']},
+    {id:'oncall',
+     re:/what happens on the call|first call|intro call|discovery/i,
+     text:"The intro call is 30 minutes, no slides, no pitch:\n\n1. You describe how your business runs today \u2014 where the hours go.\n2. Pedro points at the 2\u20133 places AI would pay off first, honestly \u2014 including where it wouldn't.\n3. If there's a fit, you get a concrete proposal within days. If not, you leave with a free action list.",
+     actions:[ACT.book],quick:['Pricing','Which industries?']},
+    {id:'pricing',
+     re:/price|cost|pricing|fee|invest|budget|how much|quanto|expensive|cheap/i,
+     text:"Every engagement is scoped, but the shape is consistent:\n\n\u2022 Ground School \u2014 team training sprint. Days, not months.\n\u2022 Takeoff \u2014 we build your first agents & automations with you. Typically 2\u20136 weeks.\n\u2022 Autopilot \u2014 optional monthly support while your team takes over.\n\nBudgets scale with team size and scope \u2014 a training sprint is a different animal than a full agent build-out. The honest way to get a number: 30 minutes with Pedro, real proposal within days.",
+     quick:['Book a call','What\u2019s included in training?']},
+    {id:'training',
+     re:/train|course|workshop|learn|teach|ground school|formac\u00e3o|forma\u00e7\u00e3o/i,
+     text:"Ground School is hands-on, on YOUR real work \u2014 not generic slides:\n\n\u2022 AI fundamentals for non-engineers: what these models actually do, and their failure modes\n\u2022 Prompt systems your team keeps and reuses\n\u2022 Working sessions on your real documents, emails and processes\n\u2022 Tool selection for your stack \u2014 we're tool-agnostic\n\nRuns in English or Portuguese (French and Spanish possible), remote or on-site in Portugal.",
+     quick:['Book a call','What can you build?']},
+    {id:'build',
+     re:/build|implement|automat|agent|chatbot|integrat|workflow|deploy|what can you (do|make)/i,
+     text:"The Takeoff phase is where we build with you. Typical builds:\n\n\u2022 AI agents that answer customers \u2014 web chat, WhatsApp, email\n\u2022 Document machines: proposals, reports, summaries that write themselves\n\u2022 Workflow automation between your existing tools (CRM, email, sheets, calendars)\n\u2022 Knowledge assistants trained on your company docs (RAG)\n\u2022 Voice and vision where it earns its keep\n\nThis chat you're using? Same stack we deploy for clients.",
+     quick:['Which industries?','Book a call']},
+    {id:'industries',
+     re:/industr|sector|niche|type of (business|compan)|who do you work|clients?\b/i,
+     text:"Voomox works best with SMEs where repetitive communication and document work eat the week: hospitality & short-term rentals, real estate, professional services, e-commerce, and gaming \u2014 Pedro's home turf for 11 years.\n\nThe honest filter: if your team spends hours on email, proposals, guest/client messages or reporting, there's ROI. If your bottleneck is physical operations, AI may not be the first fix \u2014 and Pedro will tell you that.",
+     quick:['Book a call','Pricing']},
+    {id:'timeline',
+     re:/how long|timeline|duration|weeks|months|fast|quickly|when.*(results|ready)/i,
+     text:"Typical flight time:\n\n\u2022 First training session \u2192 within days of kickoff\n\u2022 First working automation \u2192 2\u20134 weeks\n\u2022 Team flying independently \u2192 2\u20133 months\n\nWe deliberately ship something real in the first weeks \u2014 momentum beats roadmaps.",
+     quick:['Book a call','What can you build?']},
+    {id:'tools',
+     re:/which (ai|tools|models)|claude|gpt|openai|gemini|copilot|stack|software/i,
+     text:"Tool-agnostic, on principle. We work with Claude, GPT, Gemini and open models, plus whatever runs your business today \u2014 Gmail/Outlook, WhatsApp, your CRM, spreadsheets, booking systems.\n\nWe pick per use case for quality, cost and data privacy \u2014 and we're not resellers, so nobody's pushing a license on you.",
+     quick:['What can you build?','Book a call']},
+    {id:'data',
+     re:/secur|privac|gdpr|data|confidential|nda|safe/i,
+     text:"Short version: your data stays yours.\n\n\u2022 We build inside YOUR accounts and infrastructure \u2014 you hold the keys\n\u2022 GDPR-conscious tool and model selection (EU-based options where it matters)\n\u2022 NDA before we look at anything sensitive \u2014 standard practice\n\u2022 No client data ever used to train anything",
+     quick:['Book a call','Which industries?']},
+    {id:'who',
+     re:/who|pedro|founder|about you|background|experience/i,
+     text:"Voomox was founded by Pedro Aguiar \u2014 19 years in tech and business development across gaming (Ubisoft, Square Enix), Web3 and AI, working across the EU and LATAM in four languages.\n\nThe difference: Pedro runs his own companies on the same agents and automations Voomox builds for clients. He teaches what he operates, not what he read.",
+     actions:[ACT.li,ACT.book],quick:['What does Voomox do?']},
+    {id:'what',
+     re:/what.*(voomox|you do)|about voomox|services|help me|why voomox/i,
+     text:"Voomox does two things, in order:\n\n1. Teaches your team how AI actually works \u2014 hands-on, on your real workflows, in EN/PT/FR/ES.\n2. Builds it into your business \u2014 custom agents, chatbots and automations wired into the tools you already use.\n\nThe goal is independence: a team that ships its own automations and knows when AI is the wrong tool. No hype, no vendor lock-in.",
+     quick:['What can you build?','Pricing','Book a call']},
+    {id:'greet',
+     re:/^(hi|hello|hey|yo|ol\u00e1|ola|bom dia|boa tarde|boa noite)\b/i,
+     text:"Hey! \u2708\uFE0F Ask me anything about Voomox \u2014 what we build, pricing, how training works \u2014 or grab a slot with Pedro directly. (Falo portugu\u00eas tamb\u00e9m.)",
+     quick:['What does Voomox do?','Book a call','Pricing']},
+    {id:'thanks',
+     re:/^(thanks|thank you|obrigad|cheers|great|perfect|cool|nice)\b/i,
+     text:"Anytime! \u2708\uFE0F If you want to take this further, Pedro's calendar is one tap away \u2014 or just come back and ask me more.",
+     actions:[ACT.book],quick:[]}
+  ];
+  const PT_FALLBACK={text:"Boa pergunta! Eu funciono melhor em ingl\u00eas, mas o Pedro fala portugu\u00eas nativamente \u2014 marque uma chamada ou mande WhatsApp e ele responde em PT.",actions:[ACT.book,ACT.wa],quick:[]};
+  const FALLBACK={text:"Good question \u2014 that one deserves Pedro's brain, not mine. Two ways to get a real answer fast:",actions:[ACT.book,ACT.wa],quick:['What does Voomox do?','Pricing']};
 
   function add(role,text){const m=document.createElement('div');m.className='msg '+role;m.textContent=text;body.appendChild(m);body.scrollTop=body.scrollHeight;return m;}
   function typing(){const m=document.createElement('div');m.className='msg agent typing';m.innerHTML='<i></i><i></i><i></i>';body.appendChild(m);body.scrollTop=body.scrollHeight;return m;}
-  function setDemo(){status.textContent='Demo mode';status.classList.add('demo');}
+  function addActions(list){
+    if(!list||!list.length)return;
+    const w=document.createElement('div');w.className='msg-actions';
+    list.forEach(a=>{const el=document.createElement('a');el.textContent=a.t;el.href=a.h;el.target='_blank';el.rel='noopener';if(a.alt)el.className='alt';w.appendChild(el);});
+    body.appendChild(w);body.scrollTop=body.scrollHeight;
+  }
+  function addQuick(list){
+    if(!list||!list.length)return;
+    const w=document.createElement('div');w.className='qrow';
+    list.forEach(q=>{const b=document.createElement('button');b.textContent=q;b.onclick=()=>{w.remove();Chat.ask(q);};w.appendChild(b);});
+    body.appendChild(w);body.scrollTop=body.scrollHeight;
+  }
+  function respond(item){add('agent',item.text);addActions(item.actions);addQuick(item.quick);ctx.lastIntent=item.id||null;}
+  function setLocal(){status.textContent='Concierge';status.classList.add('demo');}
+
+  function localAnswer(text){
+    const em=text.match(/[\w.+-]+@[\w-]+\.[\w.]{2,}/);
+    if(em&&!ctx.email){ctx.email=em[0];
+      return {text:"Got it \u2014 "+ctx.email+" noted. Pedro will reach out within one business day.\n\nWant to skip the wait and pick a time yourself?",actions:[ACT.book,ACT.wa],quick:[]};}
+    for(const k of KB)if(k.re.test(text))return k;
+    if(/[\u00e3\u00f5\u00e7\u00e1\u00e9\u00ed\u00f3\u00fa\u00e2\u00ea]|obrigad|voc\u00ea|empresa|pre\u00e7o|ajuda/i.test(text))return PT_FALLBACK;
+    return FALLBACK;
+  }
 
   async function callAgent(text){
-    if(AGENT_CFG.PROXY_URL){
-      const r=await fetch(AGENT_CFG.PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({message:text,conversation_id:conversationId})});
-      if(!r.ok)throw new Error('proxy '+r.status);
-      const d=await r.json();
-      if(d.conversation_id)conversationId=d.conversation_id;
-      return d.reply||d.content||JSON.stringify(d);
-    }
-    throw new Error('no route');
+    if(!AGENT_CFG.PROXY_URL)throw new Error('no route');
+    const r=await fetch(AGENT_CFG.PROXY_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:text,conversation_id:conversationId})});
+    if(!r.ok)throw new Error('proxy '+r.status);
+    const d=await r.json();
+    if(d.conversation_id)conversationId=d.conversation_id;
+    return d.reply||d.content||JSON.stringify(d);
   }
-  function demoReply(text){for(const [re,ans] of DEMO.answers)if(re.test(text))return ans;return DEMO.fallback;}
 
   async function send(){
     const text=input.value.trim();if(!text)return;
     input.value='';suggest.style.display='none';
     add('user',text);
+    const local=localAnswer(text);
+    // booking / contact / lead-capture always answered instantly on-page
+    if(local.local||ctx.email===text.match(/[\w.+-]+@[\w-]+\.[\w.]{2,}/)?.[0]){
+      const t=typing();setTimeout(()=>{t.remove();respond(local);},550);return;
+    }
     const t=typing();
-    try{const reply=await callAgent(text);t.remove();add('agent',reply);}
-    catch(e){t.remove();setDemo();await new Promise(s=>setTimeout(s,600));add('agent',demoReply(text));}
+    try{const reply=await callAgent(text);t.remove();add('agent',reply);
+        if(/pric|cost|book|call|meet/i.test(text))addActions([ACT.book,ACT.wa]);}
+    catch(e){t.remove();setLocal();await new Promise(s=>setTimeout(s,450));respond(local);}
   }
 
   return {
     open(){panel.classList.add('open');fab.style.display='none';input.focus();
-      if(!greeted){greeted=true;const t=typing();setTimeout(()=>{t.remove();add('agent',DEMO.greet);},900);}},
+      if(!greeted){greeted=true;const t=typing();setTimeout(()=>{t.remove();
+        respond({text:"Hey \u2014 I'm the Voomox agent. \u2708\uFE0F\n\nI can explain what we do, sketch pricing, book you directly into Pedro's calendar, or hand you over to his WhatsApp. What's on your mind?",
+          quick:['\uD83D\uDCC5 Book a call','What does Voomox do?','Pricing']});},900);}},
     close(){panel.classList.remove('open');fab.style.display='flex';},
     send,
     ask(q){input.value=q;send();}
   };
 })();
+(function(){const f=document.getElementById('footWa');if(f)f.href=WA_LINK;})();
 document.getElementById('input').addEventListener('keydown',e=>{if(e.key==='Enter')Chat.send();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape')Chat.close();});
 </script>
