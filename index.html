@@ -631,6 +631,7 @@ footer .tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-tra
 const AGENT_CFG = {
   PROXY_URL: "/api/agent",                                        // Vercel serverless proxy to the Base44 superagent
   AVAILABILITY_URL: "/api/availability",                          // Vercel serverless proxy to Calendly's availability API
+  LEAD_URL: "/api/lead",                                          // Vercel serverless proxy that emails Pedro new lead contacts
   CALENDLY_URL: "https://calendly.com/pedrodaguiar/one-on-one",   // Calendly link (syncs to Google Calendar)
   WHATSAPP: "351915873259",                                 // ⚠️ YOUR NUMBER, digits only, country code first
   EMAIL: "pedro.aguiar@voomox.com"
@@ -887,7 +888,7 @@ const Chat=(function(){
         input=document.getElementById('input'),fab=document.getElementById('fab'),
         status=document.getElementById('status'),suggest=document.getElementById('suggest');
   let conversationId=null,greeted=false;
-  const ctx={email:null,lastIntent:null};
+  const ctx={email:null,phone:null,lastIntent:null};
 
   const ACT={
     book:{t:'\uD83D\uDCC5 Book a call',h:AGENT_CFG.CALENDLY_URL},
@@ -995,10 +996,28 @@ const Chat=(function(){
     }catch(e){t.remove();}
   }
 
-  function localAnswer(text){
+  function extractContact(text){
     const em=text.match(/[\w.+-]+@[\w-]+\.[\w.]{2,}/);
-    if(em&&!ctx.email){ctx.email=em[0];
-      return {text:"Got it \u2014 "+ctx.email+" noted. Pedro will reach out within one business day.\n\nWant to skip the wait and pick a time yourself?",actions:[ACT.book,ACT.wa],quick:[]};}
+    if(em)return{type:'email',value:em[0]};
+    const t=text.trim(),digits=t.replace(/\D/g,'');
+    if(digits.length>=8&&digits.length<=15&&/^[\d\s()+.-]+$/.test(t))return{type:'phone',value:t};
+    return null;
+  }
+
+  function notifyLead(contact){
+    if(!AGENT_CFG.LEAD_URL)return;
+    fetch(AGENT_CFG.LEAD_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({[contact.type]:contact.value,intent:ctx.lastIntent,page:location.href})
+    }).catch(()=>{});
+  }
+
+  function localAnswer(text,contact){
+    if(contact){
+      const already=contact.type==='email'?ctx.email===contact.value:ctx.phone===contact.value;
+      if(contact.type==='email')ctx.email=contact.value;else ctx.phone=contact.value;
+      if(!already)notifyLead(contact);
+      return {text:"Got it \u2014 "+contact.value+" noted. Pedro will reach out within one business day.\n\nWant to skip the wait and pick a time yourself?",actions:[ACT.book,ACT.wa],quick:[]};
+    }
     for(const k of KB)if(k.re.test(text))return k;
     if(/[\u00e3\u00f5\u00e7\u00e1\u00e9\u00ed\u00f3\u00fa\u00e2\u00ea]|obrigad|voc\u00ea|empresa|pre\u00e7o|ajuda/i.test(text))return PT_FALLBACK;
     return FALLBACK;
@@ -1018,9 +1037,10 @@ const Chat=(function(){
     const text=input.value.trim();if(!text)return;
     input.value='';suggest.style.display='none';
     add('user',text);
-    const local=localAnswer(text);
+    const contact=extractContact(text);
+    const local=localAnswer(text,contact);
     // booking / contact / lead-capture always answered instantly on-page
-    if(local.local||ctx.email===text.match(/[\w.+-]+@[\w-]+\.[\w.]{2,}/)?.[0]){
+    if(local.local||contact){
       const t=typing();setTimeout(()=>{t.remove();respond(local);},550);return;
     }
     const t=typing();
