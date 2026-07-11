@@ -629,8 +629,9 @@ footer .tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-tra
    file — it would be readable by anyone via view-source.
    ============================================================ */
 const AGENT_CFG = {
-  PROXY_URL: "/api/agent",                                  // Vercel serverless proxy to the Base44 superagent
-  CALENDLY_URL: "https://calendly.com/pedrodaguiar/intro",  // Calendly link (syncs to Google Calendar)
+  PROXY_URL: "/api/agent",                                        // Vercel serverless proxy to the Base44 superagent
+  AVAILABILITY_URL: "/api/availability",                          // Vercel serverless proxy to Calendly's availability API
+  CALENDLY_URL: "https://calendly.com/pedrodaguiar/one-on-one",   // Calendly link (syncs to Google Calendar)
   WHATSAPP: "351915873259",                                 // ⚠️ YOUR NUMBER, digits only, country code first
   EMAIL: "pedro.aguiar@voomox.com"
 };
@@ -976,8 +977,23 @@ const Chat=(function(){
     list.forEach(q=>{const b=document.createElement('button');b.textContent=q;b.onclick=()=>{w.remove();Chat.ask(q);};w.appendChild(b);});
     body.appendChild(w);body.scrollTop=body.scrollHeight;
   }
-  function respond(item){add('agent',item.text);addActions(item.actions);addQuick(item.quick);ctx.lastIntent=item.id||null;}
+  function respond(item){add('agent',item.text);addActions(item.actions);addQuick(item.quick);ctx.lastIntent=item.id||null;if(item.id==='book')suggestSlots();}
   function setLocal(){status.textContent='Concierge';status.classList.add('demo');}
+
+  async function suggestSlots(){
+    if(!AGENT_CFG.AVAILABILITY_URL)return;
+    const t=typing();
+    try{
+      const r=await fetch(AGENT_CFG.AVAILABILITY_URL);
+      if(!r.ok)throw new Error('availability '+r.status);
+      const d=await r.json();
+      t.remove();
+      if(d.slots&&d.slots.length){
+        const lines=d.slots.map(s=>'• '+s.label).join('\n');
+        add('agent',"Here's what's actually open on Pedro's calendar right now:\n\n"+lines+"\n\nTap “Book a call” above and pick one — it'll land straight on that slot.");
+      }
+    }catch(e){t.remove();}
+  }
 
   function localAnswer(text){
     const em=text.match(/[\w.+-]+@[\w-]+\.[\w.]{2,}/);
