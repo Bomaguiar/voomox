@@ -225,7 +225,7 @@ footer{background:var(--dk);color:var(--dkmut);padding:80px 0 40px;margin-top:40
 .foot-logo{font-family:var(--disp);font-weight:800;font-size:26px;color:#fff}
 .foot-logo b{color:var(--signal)}
 footer .tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;margin-top:14px}
-.foot-links{display:flex;gap:28px;font-size:14.5px}
+.foot-links{display:flex;flex-wrap:wrap;gap:14px 28px;font-size:14.5px}
 .foot-links a{text-decoration:none;transition:color .2s}
 .foot-links a:hover{color:#fff}
 .foot-bottom{border-top:1px solid var(--dkline);margin-top:56px;padding-top:26px;font-family:var(--mono);font-size:12px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
@@ -310,6 +310,14 @@ footer .tag{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-tra
   .bpass::before,.bpass::after{display:none}
   #flightpath{display:none}
   .themer{bottom:92px}
+  footer{padding-bottom:110px}
+  .bp-grid{grid-template-columns:repeat(2,1fr);row-gap:18px}
+  .themer{display:none}
+}
+@media(max-width:480px){
+  .wrap{padding:0 20px}
+  .hero-cta{flex-direction:column;align-items:flex-start;gap:14px}
+  .founder-grid{padding:40px 22px}
 }
 @media(prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.001s!important;transition-duration:.001s!important;transition-delay:0s!important;animation-delay:0s!important}
@@ -725,17 +733,26 @@ const WA_LINK="https://wa.me/"+AGENT_CFG.WHATSAPP+"?text="+encodeURIComponent("H
   const field=document.getElementById('chipfield');
   const chips=[...field.querySelectorAll('.chip')];
   const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
-  // deterministic-ish scatter grid with jitter, avoiding dead center clumping
-  const cols=innerWidth<700?3:5;
-  chips.forEach((c,i)=>{
-    const col=i%cols,row=Math.floor(i/cols);
-    const x=(col+0.5)/cols*100+(Math.random()*10-5);
-    const y=(row+0.5)/Math.ceil(chips.length/cols)*100+(Math.random()*12-6);
-    c.style.left='calc('+Math.min(88,Math.max(2,x))+'% - 60px)';
-    c.style.top=Math.min(90,Math.max(2,y))+'%';
-    c.style.setProperty('--dur',(4.5+Math.random()*3.5)+'s');
-    c.style.setProperty('--del',(-Math.random()*4)+'s');
-  });
+  const pad=8;
+  function scatter(){
+    // deterministic-ish scatter grid with jitter, avoiding dead center clumping
+    const cols=innerWidth<700?3:5;
+    const fieldW=field.clientWidth;
+    chips.forEach((c,i)=>{
+      const col=i%cols,row=Math.floor(i/cols);
+      const x=(col+0.5)/cols*100+(Math.random()*10-5);
+      const y=(row+0.5)/Math.ceil(chips.length/cols)*100+(Math.random()*12-6);
+      const cw=c.offsetWidth||120;
+      const targetPx=fieldW*Math.min(96,Math.max(4,x))/100-cw/2;
+      c.style.left=Math.min(fieldW-cw-pad,Math.max(pad,targetPx))+'px';
+      c.style.top=Math.min(90,Math.max(2,y))+'%';
+      c.style.setProperty('--dur',(4.5+Math.random()*3.5)+'s');
+      c.style.setProperty('--del',(-Math.random()*4)+'s');
+    });
+  }
+  scatter();
+  let resizeT;
+  addEventListener('resize',()=>{clearTimeout(resizeT);resizeT=setTimeout(scatter,200)});
   if(reduce)return;
   let tx=0,ty=0,cx=0,cy=0;
   field.parentElement.addEventListener('mousemove',e=>{
